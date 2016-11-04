@@ -1,0 +1,42 @@
+---
+- hosts: localhost
+  tasks:
+
+  - name: adding high cpu utilization group
+    hawkular_alerts:
+      endpoint: "{{ hawkular_endpoint }}"
+      token: "{{ hawkular_token }}"
+      tenant: _system
+      group:
+        id: node-high-cpu-utilization
+        name: Node High CPU Utilization
+        severity: HIGH 
+        enabled: true
+
+  - name: adding high cpu utilization condition
+    hawkular_alerts:
+      endpoint: "{{ hawkular_endpoint }}"
+      token: "{{ hawkular_token }}"
+      tenant: _system
+      group_conditions:
+        groupId: node-high-cpu-utilization
+        triggerMode: FIRING
+        conditions:
+        - type: THRESHOLD
+          dataId: cpu_node_utilization
+          operator: GT
+          threshold: 0.8
+
+  - name: adding high cpu utilizatio members
+    with_items:
+      - vm-oshift-alerts-01
+      - vm-oshift-alerts-02
+    hawkular_alerts:
+      endpoint: "{{ hawkular_endpoint }}"
+      token: "{{ hawkular_token }}"
+      tenant: _system
+      group_member:
+        groupId: node-high-cpu-utilization
+        memberId: "{{ item }}"
+        dataIdMap:
+          cpu_node_utilization: "hm_g_machine/{{ item }}.vn1.bytenix.com/cpu/node_utilization"
